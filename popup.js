@@ -3,14 +3,14 @@ let configuracion = {
         { value: 'factory', text: 'The Factory' },
         { value: 'pnp', text: 'Desarrolos PNP' },
     ],
-    modelos: [
-        'TM-T20II',
-        'TM-T88V',
-        'TM-T88VI',
-        'TM-T88VI-iHUB',
-        'TM-T88VI-DT2',
-        'TM-T88VI-iHUB-DT2',
-    ],
+    modelos: {
+        factory: [
+            { value: 'TM-T900FA', text: 'TM-T900FA' },
+        ],
+        pnp: [
+            { value: 'PNP-232', text: 'PNP-232' },
+        ]
+    },
     flags: [
         { value: '00', text: '00 - (8 enteros y 2 decimales)' },
         { value: '01', text: '01 - (7 enteros y 3 decimales)' },
@@ -32,6 +32,7 @@ function createSelect(id, options, label) {
     select.id = id;
     select.style.width = '100%';
 
+    console.log(options)
 
     options.forEach(option => {
         const optionElement = document.createElement("option");
@@ -46,14 +47,6 @@ function createSelect(id, options, label) {
     $div.appendChild(select);
     document.getElementById('data-selects').appendChild($div);
 }
-
-
-function createSelects() {
-    createSelect('impresoraFiscal', configuracion.impresoraFiscales, 'Impresora Fiscal');
-    createSelect('modeloImpresora', configuracion.modelos.map(modelo => ({ value: modelo, text: modelo })), 'Modelo Impresora');
-    createSelect('flag', configuracion.flags, 'Flag 21');
-}
-
 
 
 
@@ -134,17 +127,38 @@ async function loadConfig() {
 
     chrome.storage.sync.get(['iplocal', 'impresoraFiscal', 'modeloImpresora', 'flag'], function (result) {
         document.getElementById('ip').value = result.iplocal;
+
+        createSelect('impresoraFiscal', configuracion.impresoraFiscales, 'Impresora Fiscal');
         document.getElementById('impresoraFiscal').value = result.impresoraFiscal;
+
+        createSelect('modeloImpresora', configuracion.modelos[result.impresoraFiscal], 'Modelo Impresora');
         document.getElementById('modeloImpresora').value = result.modeloImpresora;
+
+        createSelect('flag', configuracion.flags, 'Flag 21');
         document.getElementById('flag').value = result.flag;
+
+
+        document.getElementById('impresoraFiscal').addEventListener('change', (event) => {
+            const impresoraFiscal = event.target.value;
+            const modelos = configuracion.modelos[impresoraFiscal];
+    
+            document.getElementById('modeloImpresora').innerHTML = '';
+    
+            modelos.forEach(modelo => {
+                const optionElement = document.createElement("option");
+                optionElement.value = modelo.value;
+                optionElement.text = modelo.text;
+                document.getElementById('modeloImpresora').appendChild(optionElement);
+            });
+        });
     });
 }
 
 
 
 if (document.getElementById('ip') !== null) {
-    createSelects();
     loadConfig();
 
     document.getElementById('guardar').addEventListener('click', saveConfig);
 }
+
